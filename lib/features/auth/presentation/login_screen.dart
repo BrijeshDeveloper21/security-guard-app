@@ -311,8 +311,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                   ),
+                  // Helper text for easy testing
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Demo Testing Numbers (OTP is 1234):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF475569))),
+                        SizedBox(height: 8),
+                        Text('📱 8355880200 - Resident', style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
+                        Text('📱 8355880201 - Security Guard', style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
+                        Text('📱 8355880202 - Society Admin', style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
+                        Text('📱 8355880203 - Super Admin', style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
+                        SizedBox(height: 4),
+                        Text('Any other number -> Triggers "Join Society"', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: Color(0xFF64748B))),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 32),
-
                 ],
               ),
             ),

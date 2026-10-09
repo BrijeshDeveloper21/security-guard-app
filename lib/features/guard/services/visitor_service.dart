@@ -126,6 +126,139 @@ class VisitorService extends ChangeNotifier {
     }
   }
 
+  /// Records a new visitor and requests Resident Approval instead of auto-admitting
+  Future<Visit> requestResidentApproval({
+    required String tenantId,
+    required String visitorName,
+    required String visitorPhone,
+    String? visitorPhotoUrl,
+    required String flatId,
+    required String flatNumber,
+    required String wingName,
+    required VisitorType visitorType,
+    required VisitPurpose purpose,
+    String? customPurpose,
+    String? vehicleNumber,
+    required String entryGateId,
+    required String entryGateName,
+    required String entryGuardId,
+    required String entryGuardName,
+  }) async {
+    // 1. Generate unique sequential-like visit ID
+    final year = DateTime.now().year;
+    final randomSuffix = (100000 + _db.visits.length + 1).toString();
+    final visitId = 'VIS-$year-$randomSuffix';
+
+    final automaticEntryTime = DateTime.now();
+
+    final secureToken = QrService.generateSecureVisitToken(
+      tenantId: tenantId,
+      visitId: visitId,
+      entryTime: automaticEntryTime,
+    );
+
+    // Create / Update Visitor profile logic
+    var existingVisitor = findRepeatVisitor(tenantId: tenantId, phone: visitorPhone);
+    String visitorId;
+    if (existingVisitor != null) {
+      visitorId = existingVisitor.id;
+      final updated = existingVisitor.copyWith(
+        name: visitorName,
+        photoUrl: visitorPhotoUrl ?? existingVisitor.photoUrl,
+        vehicleNumber: vehicleNumber ?? existingVisitor.vehicleNumber,
+        totalVisits: existingVisitor.totalVisits + 1,
+        lastVisitedFlat: flatNumber,
+        lastVisitAt: automaticEntryTime,
+      );
+      final idx = _db.visitors.indexWhere((v) => v.id == existingVisitor.id);
+      if (idx != -1) _db.visitors[idx] = updated;
+    } else {
+      visitorId = 'vis_${_uuid.v4().substring(0, 8)}';
+      final newVisitor = Visitor(
+        id: visitorId,
+        tenantId: tenantId,
+        name: visitorName,
+        phone: visitorPhone,
+        photoUrl: visitorPhotoUrl,
+        vehicleNumber: vehicleNumber,
+        visitorType: visitorType,
+        totalVisits: 1,
+        lastVisitedFlat: flatNumber,
+        createdAt: automaticEntryTime,
+        lastVisitAt: automaticEntryTime,
+      );
+      _db.visitors.add(newVisitor);
+    }
+
+    // Create the Visit record in a PENDING state
+    final newVisit = Visit(
+      id: visitId,
+      tenantId: tenantId,
+      visitorId: visitorId,
+      visitorName: visitorName,
+      visitorPhone: visitorPhone,
+      visitorPhotoUrl: visitorPhotoUrl,
+      flatId: flatId,
+      flatNumber: flatNumber,
+      wingName: wingName,
+      visitorType: visitorType,
+      purpose: purpose,
+      customPurpose: customPurpose,
+      vehicleNumber: vehicleNumber,
+      entryGateId: entryGateId,
+      entryGateName: entryGateName,
+      entryGuardId: entryGuardId,
+      entryGuardName: entryGuardName,
+      entryTimestamp: automaticEntryTime,
+      status: VisitStatus.inside, // Pending state effectively managed by approvalStatus
+      approvalStatus: ApprovalStatus.pending,
+      secureVisitToken: secureToken,
+    );
+
+    _db.visits.insert(0, newVisit);
+    
+    notifyListeners();
+    return newVisit;
+  }
+
+  /// Override admit (Emergency fallback)
+  Future<Visit> forceAdmit({
+    required String tenantId,
+    required String visitId,
+    required String guardId,
+    required String guardName,
+  }) async {
+    final index = _db.visits.indexWhere((v) => v.id == visitId && v.tenantId == tenantId);
+    if (index == -1) throw Exception("Visit not found.");
+
+    final v = _db.visits[index];
+    final updated = v.copyWith(
+      approvalStatus: ApprovalStatus.approved,
+      status: VisitStatus.inside,
+    );
+    _db.visits[index] = updated;
+
+    _auditService.logAction(
+      tenantId: tenantId,
+      userId: guardId,
+      userName: guardName,
+      userRole: 'Security Guard',
+      action: 'FORCE_ADMIT_OVERRIDE',
+      entityType: 'Visit',
+      entityId: visitId,
+      details: 'Guard $guardName overrode approval fallback to admit ${v.visitorName}',
+    );
+
+    notifyListeners();
+    return updated;
+  }
+
+  /// Deletes a visit
+  void deleteVisit(String visitId) {
+    _db.visits.removeWhere((v) => v.id == visitId);
+    notifyListeners();
+  }
+
   /// Records a new visitor and automatic entry timestamp
   Future<Visit> recordNewEntry({
     required String tenantId,

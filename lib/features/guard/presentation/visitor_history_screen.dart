@@ -7,6 +7,8 @@ import 'package:security_app/core/theme/app_colors.dart';
 import 'package:security_app/core/widgets/status_chip.dart';
 import 'package:security_app/features/resident/widgets/qr_view_dialog.dart';
 
+import 'package:security_app/features/guard/presentation/visitor_detail_screen.dart';
+
 class VisitorHistoryScreen extends ConsumerStatefulWidget {
   const VisitorHistoryScreen({super.key});
 
@@ -137,9 +139,9 @@ class _VisitorHistoryScreenState extends ConsumerState<VisitorHistoryScreen> {
                         label: 'View Visit Details',
                         child: InkWell(
                           onTap: () {
-                            showDialog(
-                              context: context,
-                              builder: (_) => QrViewDialog(visit: v),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => VisitorDetailScreen(visit: v)),
                             );
                           },
                           borderRadius: BorderRadius.circular(16),

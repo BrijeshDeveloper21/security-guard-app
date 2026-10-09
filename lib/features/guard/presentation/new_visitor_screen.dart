@@ -127,7 +127,9 @@ class _NewVisitorScreenState extends ConsumerState<NewVisitorScreen> {
 
     try {
       final visitorService = ref.read(visitorServiceProvider);
-      final newVisit = await visitorService.recordNewEntry(
+      
+      // Changed to requestResidentApproval instead of recordNewEntry
+      final newVisit = await visitorService.requestResidentApproval(
         tenantId: tenant.id,
         visitorName: _nameController.text.trim(),
         visitorPhone: _phoneController.text.trim(),
@@ -149,23 +151,9 @@ class _NewVisitorScreenState extends ConsumerState<NewVisitorScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      // Pop current form
-      Navigator.pop(context);
+      // Show Awaiting Approval Fallback Dialog instead of direct admission
+      _showAwaitingApprovalDialog(newVisit);
 
-      // Display newly generated QR Pass
-      showDialog(
-        context: context,
-        builder: (_) => QrViewDialog(visit: newVisit),
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '✓ Entry recorded! ${newVisit.visitorName} admitted via ${gate.name}',
-          ),
-          backgroundColor: AppColors.statusApproved,
-        ),
-      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -173,6 +161,127 @@ class _NewVisitorScreenState extends ConsumerState<NewVisitorScreen> {
         SnackBar(content: Text('Error recording entry: $e'), backgroundColor: AppColors.statusRejected),
       );
     }
+  }
+
+  void _showAwaitingApprovalDialog(Visit visit) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: AppColors.primary),
+            const SizedBox(height: 24),
+            Text(
+              'Awaiting Approval',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Request sent to Flat ${visit.flatNumber}',
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+            ),
+            const SizedBox(height: 24),
+            
+            // Guard Copilot Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.support_agent, color: AppColors.primary, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Guard Copilot',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Flat ${visit.flatNumber} approval pending hai. Kripya Resident ko call karein ya override admit ke liye supervisor se permission lein.',
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13, height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    label: 'Call Resident',
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Dummy call action
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling resident...')));
+                      },
+                      icon: const Icon(Icons.phone, size: 18),
+                      label: const Text('Call'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Semantics(
+                    button: true,
+                    label: 'Override and Admit Visitor',
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final tenant = ref.read(currentTenantProvider);
+                        final user = ref.read(currentUserProvider);
+                        await ref.read(visitorServiceProvider).forceAdmit(
+                          tenantId: tenant!.id, 
+                          visitId: visit.id, 
+                          guardId: user!.id, 
+                          guardName: user.name
+                        );
+                        if (mounted) {
+                          Navigator.pop(ctx);
+                          Navigator.pop(context); // Close new visitor screen
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Visitor Admitted (Override)'), backgroundColor: AppColors.statusApproved),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.security, size: 18),
+                      label: const Text('Admit'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.statusApproved,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -482,13 +591,13 @@ class _NewVisitorScreenState extends ConsumerState<NewVisitorScreen> {
                 onPressed: _isLoading ? null : _submitEntry,
                 icon: _isLoading
                     ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onSurface, strokeWidth: 2))
-                    : const Icon(Icons.check_circle_rounded, size: 24),
+                    : const Icon(Icons.send_rounded, size: 24),
                 label: const Text(
-                  'CONFIRM ENTRY (10-15s FLOW)',
+                  'REQUEST RESIDENT APPROVAL',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.statusApproved,
+                  backgroundColor: AppColors.primary,
                   minimumSize: const Size(double.infinity, 56),
                 ),
               ),

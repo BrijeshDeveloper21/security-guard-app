@@ -15,6 +15,7 @@ class EmergencyViewScreen extends ConsumerStatefulWidget {
 class _EmergencyViewScreenState extends ConsumerState<EmergencyViewScreen> {
   final TextEditingController _filterController = TextEditingController();
   VisitorType? _selectedTypeFilter;
+  bool _showLongStayOnly = false;
 
   @override
   void dispose() {
@@ -30,6 +31,13 @@ class _EmergencyViewScreenState extends ConsumerState<EmergencyViewScreen> {
       if (_selectedTypeFilter != null && v.visitorType != _selectedTypeFilter) {
         return false;
       }
+      
+      // Long stay filter (Over 4 hours)
+      if (_showLongStayOnly) {
+        final hoursInside = DateTime.now().difference(v.entryTimestamp).inHours;
+        if (hoursInside < 4) return false;
+      }
+
       final query = _filterController.text.trim().toLowerCase();
       if (query.isNotEmpty) {
         return v.visitorName.toLowerCase().contains(query) ||
@@ -41,6 +49,12 @@ class _EmergencyViewScreenState extends ConsumerState<EmergencyViewScreen> {
     }).toList();
 
     final timeFormatter = DateFormat('hh:mm a');
+
+    // Aggregate gate-wise count
+    final Map<String, int> gateCount = {};
+    for (var visit in insideList) {
+      gateCount[visit.entryGateName] = (gateCount[visit.entryGateName] ?? 0) + 1;
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0A0A),
@@ -91,10 +105,95 @@ class _EmergencyViewScreenState extends ConsumerState<EmergencyViewScreen> {
               ],
             ),
           ),
+          
+          // Gate-wise distribution and Alert Action
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF171717),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('GATE-WISE COUNT', style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 6),
+                        ...gateCount.entries.map((e) => Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(child: Text(e.key, style: const TextStyle(color: Colors.white, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                              Text('${e.value}', style: const TextStyle(color: AppColors.actionEmergency, fontWeight: FontWeight.bold, fontSize: 12)),
+                            ],
+                          ),
+                        )),
+                        if (gateCount.isEmpty)
+                          const Text('No entries', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    children: [
+                      Semantics(
+                        button: true,
+                        label: 'Alert Supervisor Immediately',
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('ALERT SENT TO SUPERVISOR! Incident reported.'), backgroundColor: AppColors.actionEmergency),
+                            );
+                          },
+                          icon: const Icon(Icons.notifications_active, color: Colors.white, size: 20),
+                          label: const Text('ALERT SUPERVISOR', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 12)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade800,
+                            minimumSize: const Size(double.infinity, 44),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Semantics(
+                        button: true,
+                        label: 'Generate Evacuation Audit Report',
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Evacuation Audit Generated to Dashboard.')),
+                            );
+                          },
+                          icon: const Icon(Icons.download, size: 16),
+                          label: const Text('AUDIT REPORT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white30),
+                            minimumSize: const Size(double.infinity, 40),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
 
           // Fast Search Bar & Category Filter
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Column(
               children: [
                 TextField(
@@ -125,6 +224,17 @@ class _EmergencyViewScreenState extends ConsumerState<EmergencyViewScreen> {
                           fontWeight: _selectedTypeFilter == null ? FontWeight.bold : FontWeight.normal,
                         ),
                         onPressed: () => setState(() => _selectedTypeFilter = null),
+                      ),
+                      const SizedBox(width: 6),
+                      ActionChip(
+                        label: const Text('⚠️ LONG STAY (>4 Hrs)'),
+                        backgroundColor: _showLongStayOnly ? Colors.orange.shade800 : const Color(0xFF262626),
+                        labelStyle: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: _showLongStayOnly ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        onPressed: () => setState(() => _showLongStayOnly = !_showLongStayOnly),
                       ),
                       const SizedBox(width: 6),
                       ...VisitorType.values.map((type) {

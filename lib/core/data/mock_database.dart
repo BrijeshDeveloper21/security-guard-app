@@ -326,9 +326,9 @@ class MockDatabase {
     users.addAll([
       AppUser(
         id: 'user_super_admin',
-        name: 'Aakash Singhal',
+        name: 'Super Admin User',
         email: 'superadmin@antigravity.security',
-        phone: '+91 98000 11111',
+        phone: '8355880203', // Mock specific login
         role: UserRole.superAdmin,
         createdAt: DateTime.now().subtract(const Duration(days: 180)),
       ),
@@ -337,7 +337,7 @@ class MockDatabase {
         tenantId: 'tenant_sunrise',
         name: 'Sunil Nair (Secretary)',
         email: 'admin@sunriseheights.com',
-        phone: '+91 98200 99881',
+        phone: '8355880202', // Mock specific login
         role: UserRole.societyAdmin,
         createdAt: DateTime.now().subtract(const Duration(days: 90)),
       ),
@@ -346,19 +346,9 @@ class MockDatabase {
         tenantId: 'tenant_sunrise',
         name: 'Ramesh Singh',
         email: 'guard.gatea@sunriseheights.com',
-        phone: '+91 97690 12345',
+        phone: '8355880201', // Mock specific login
         role: UserRole.guard,
         assignedGateId: 'gate_sunrise_a',
-        createdAt: DateTime.now().subtract(const Duration(days: 60)),
-      ),
-      AppUser(
-        id: 'user_guard_gate_b',
-        tenantId: 'tenant_sunrise',
-        name: 'Suresh Patil',
-        email: 'guard.gateb@sunriseheights.com',
-        phone: '+91 97690 54321',
-        role: UserRole.guard,
-        assignedGateId: 'gate_sunrise_b',
         createdAt: DateTime.now().subtract(const Duration(days: 60)),
       ),
       AppUser(
@@ -366,7 +356,7 @@ class MockDatabase {
         tenantId: 'tenant_sunrise',
         name: 'Rajesh Sharma',
         email: 'resident.b1204@sunriseheights.com',
-        phone: '+91 98765 43210',
+        phone: '8355880200', // Mock specific login
         role: UserRole.resident,
         flatId: 'flat_b_1204',
         flatNumber: 'B-1204',

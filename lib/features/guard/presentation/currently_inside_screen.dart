@@ -8,6 +8,8 @@ import 'package:security_app/features/guard/widgets/mark_exit_dialog.dart';
 import 'package:security_app/features/resident/widgets/qr_view_dialog.dart';
 import 'package:security_app/core/widgets/status_chip.dart';
 
+import 'package:security_app/features/guard/presentation/visitor_detail_screen.dart';
+
 class CurrentlyInsideScreen extends ConsumerStatefulWidget {
   const CurrentlyInsideScreen({super.key});
 
@@ -113,17 +115,24 @@ class _CurrentlyInsideScreenState extends ConsumerState<CurrentlyInsideScreen> {
                     separatorBuilder: (ctx, i) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final visit = filtered[index];
-                      return Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.borderLight),
-                          boxShadow: const [BoxShadow(color: AppColors.shadowLight, blurRadius: 8, offset: Offset(0, 2))],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => VisitorDetailScreen(visit: visit)),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).cardColor,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.borderLight),
+                            boxShadow: const [BoxShadow(color: AppColors.shadowLight, blurRadius: 8, offset: Offset(0, 2))],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -237,7 +246,7 @@ class _CurrentlyInsideScreenState extends ConsumerState<CurrentlyInsideScreen> {
                             ),
                           ],
                         ),
-                      );
+                      ));
                     },
                   ),
           ),

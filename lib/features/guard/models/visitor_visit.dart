@@ -249,6 +249,9 @@ class Visit {
   final String secureVisitToken; // QR Token
   final bool isPreApproved;
   final DateTime? expectedArrivalTime;
+  final int? expectedGuestCount;
+  final DateTime? validFrom;
+  final DateTime? validUntil;
   final String? notes;
   final String? rejectionReason;
 
@@ -281,6 +284,9 @@ class Visit {
     required this.secureVisitToken,
     this.isPreApproved = false,
     this.expectedArrivalTime,
+    this.expectedGuestCount,
+    this.validFrom,
+    this.validUntil,
     this.notes,
     this.rejectionReason,
   });
@@ -317,6 +323,9 @@ class Visit {
         'secureVisitToken': secureVisitToken,
         'isPreApproved': isPreApproved,
         'expectedArrivalTime': expectedArrivalTime?.toIso8601String(),
+        'expectedGuestCount': expectedGuestCount,
+        'validFrom': validFrom?.toIso8601String(),
+        'validUntil': validUntil?.toIso8601String(),
         'notes': notes,
         'rejectionReason': rejectionReason,
       };
@@ -366,6 +375,9 @@ class Visit {
         expectedArrivalTime: json['expectedArrivalTime'] != null
             ? DateTime.parse(json['expectedArrivalTime'])
             : null,
+        expectedGuestCount: json['expectedGuestCount'],
+        validFrom: json['validFrom'] != null ? DateTime.parse(json['validFrom']) : null,
+        validUntil: json['validUntil'] != null ? DateTime.parse(json['validUntil']) : null,
         notes: json['notes'],
         rejectionReason: json['rejectionReason'],
       );
@@ -399,6 +411,9 @@ class Visit {
     String? secureVisitToken,
     bool? isPreApproved,
     DateTime? expectedArrivalTime,
+    int? expectedGuestCount,
+    DateTime? validFrom,
+    DateTime? validUntil,
     String? notes,
     String? rejectionReason,
   }) {
@@ -431,6 +446,9 @@ class Visit {
       secureVisitToken: secureVisitToken ?? this.secureVisitToken,
       isPreApproved: isPreApproved ?? this.isPreApproved,
       expectedArrivalTime: expectedArrivalTime ?? this.expectedArrivalTime,
+      expectedGuestCount: expectedGuestCount ?? this.expectedGuestCount,
+      validFrom: validFrom ?? this.validFrom,
+      validUntil: validUntil ?? this.validUntil,
       notes: notes ?? this.notes,
       rejectionReason: rejectionReason ?? this.rejectionReason,
     );

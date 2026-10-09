@@ -30,7 +30,7 @@ void main() {
     test('1. Visitor creation and repeat lookup test', () async {
       final initialCount = db.visits.length;
 
-      final newVisit = await visitorService.recordNewEntry(
+      final newVisit = await visitorService.requestResidentApproval(
         tenantId: 'tenant_sunrise',
         visitorName: 'Kunal Singhania',
         visitorPhone: '9811223344',
@@ -63,7 +63,7 @@ void main() {
     test('2. Automatic entry timestamp test (no manual typing)', () async {
       final beforeTime = DateTime.now().subtract(const Duration(seconds: 1));
 
-      final visit = await visitorService.recordNewEntry(
+      final visit = await visitorService.requestResidentApproval(
         tenantId: 'tenant_sunrise',
         visitorName: 'Auto Time Test Visitor',
         visitorPhone: '9822334455',
@@ -89,7 +89,7 @@ void main() {
     // 3. Cross-Gate Exit & Automatic Exit Timestamp
     test('3. Cross-Gate Exit: Enter Gate A -> Exit Gate B automatically recorded', () async {
       // 1. Enter at Gate A
-      final visit = await visitorService.recordNewEntry(
+      final visit = await visitorService.requestResidentApproval(
         tenantId: 'tenant_sunrise',
         visitorName: 'Cross Gate Visitor',
         visitorPhone: '9833445566',

@@ -19,9 +19,12 @@ class _CreatePreApprovedPassScreenState
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _vehicleController = TextEditingController();
+  final TextEditingController _guestCountController = TextEditingController(text: '1');
 
   DateTime _expectedDate = DateTime.now();
-  TimeOfDay _expectedTime = const TimeOfDay(hour: 18, minute: 0);
+  TimeOfDay _startTime = const TimeOfDay(hour: 14, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
   VisitorType _visitorType = VisitorType.guest;
   final VisitPurpose _purpose = VisitPurpose.meetingResident;
   bool _isLoading = false;
@@ -30,6 +33,8 @@ class _CreatePreApprovedPassScreenState
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _vehicleController.dispose();
+    _guestCountController.dispose();
     super.dispose();
   }
 
@@ -45,13 +50,19 @@ class _CreatePreApprovedPassScreenState
     }
   }
 
-  Future<void> _pickTime() async {
+  Future<void> _pickTime(bool isStart) async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: _expectedTime,
+      initialTime: isStart ? _startTime : _endTime,
     );
     if (picked != null) {
-      setState(() => _expectedTime = picked);
+      setState(() {
+        if (isStart) {
+          _startTime = picked;
+        } else {
+          _endTime = picked;
+        }
+      });
     }
   }
 
@@ -67,13 +78,25 @@ class _CreatePreApprovedPassScreenState
 
     try {
       final residentService = ref.read(residentServiceProvider);
-      final expectedDateTime = DateTime(
+      final validFrom = DateTime(
         _expectedDate.year,
         _expectedDate.month,
         _expectedDate.day,
-        _expectedTime.hour,
-        _expectedTime.minute,
+        _startTime.hour,
+        _startTime.minute,
       );
+      
+      final validUntil = DateTime(
+        _expectedDate.year,
+        _expectedDate.month,
+        _expectedDate.day,
+        _endTime.hour,
+        _endTime.minute,
+      );
+
+      if (validUntil.isBefore(validFrom)) {
+        throw Exception("End time cannot be before start time.");
+      }
 
       final pass = await residentService.createPreApprovedPass(
         tenantId: tenant.id,
@@ -86,7 +109,10 @@ class _CreatePreApprovedPassScreenState
         visitorPhone: _phoneController.text.trim(),
         visitorType: _visitorType,
         purpose: _purpose,
-        expectedArrival: expectedDateTime,
+        validFrom: validFrom,
+        validUntil: validUntil,
+        guestCount: int.tryParse(_guestCountController.text) ?? 1,
+        vehicleNumber: _vehicleController.text.trim().isNotEmpty ? _vehicleController.text.trim() : null,
       );
 
       if (!mounted) return;
@@ -183,8 +209,12 @@ class _CreatePreApprovedPassScreenState
                   return ChoiceChip(
                     label: Text('${type.iconAsset} ${type.nameDisplay}'),
                     selected: isSel,
-                    selectedColor: AppColors.primary,
+                    selectedColor: AppColors.primary.withValues(alpha: 0.2),
                     backgroundColor: Theme.of(context).cardColor,
+                    labelStyle: TextStyle(
+                      color: isSel ? AppColors.primaryDark : AppColors.textSecondaryLight,
+                      fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                    ),
                     onSelected: (val) {
                       if (val) setState(() => _visitorType = type);
                     },
@@ -193,20 +223,97 @@ class _CreatePreApprovedPassScreenState
               ),
               const SizedBox(height: 16),
 
-              // Date & Time
+              // Guests and Vehicle Number Row
               Row(
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Expected Date', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                        Text('Guest Count', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _guestCountController,
+                          keyboardType: TextInputType.number,
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(Icons.group, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          ),
+                          validator: (val) => val == null || int.tryParse(val) == null || int.parse(val) < 1 ? 'Invalid' : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Vehicle Number (Optional)', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                        const SizedBox(height: 6),
+                        TextFormField(
+                          controller: _vehicleController,
+                          textCapitalization: TextCapitalization.characters,
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                          decoration: InputDecoration(
+                            hintText: 'MH-02-CB-1234',
+                            prefixIcon: Icon(Icons.directions_car, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Date & Time Slottings
+              Text('Expected Arrival Date', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+              const SizedBox(height: 6),
+              Semantics(
+                button: true,
+                label: 'Pick Date',
+                child: InkWell(
+                  onTap: _pickDate,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.borderLight),
+                      boxShadow: const [BoxShadow(color: AppColors.shadowLight, blurRadius: 8, offset: Offset(0, 2))],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            dateFormat.format(_expectedDate),
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Valid From Time', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
                         const SizedBox(height: 6),
                         Semantics(
                           button: true,
-                          label: 'Pick Date',
+                          label: 'Pick Start Time',
                           child: InkWell(
-                            onTap: _pickDate,
+                            onTap: () => _pickTime(true),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                               decoration: BoxDecoration(
@@ -217,11 +324,11 @@ class _CreatePreApprovedPassScreenState
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.calendar_today, size: 16, color: AppColors.accent),
+                                  const Icon(Icons.access_time, size: 16, color: AppColors.statusApproved),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      dateFormat.format(_expectedDate),
+                                      _startTime.format(context),
                                       style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.bold),
                                     ),
                                   ),
@@ -233,18 +340,21 @@ class _CreatePreApprovedPassScreenState
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Text('to', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textSecondaryLight)),
+                  ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Expected Time', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                        Text('Valid Until Time', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
                         const SizedBox(height: 6),
                         Semantics(
                           button: true,
-                          label: 'Pick Time',
+                          label: 'Pick End Time',
                           child: InkWell(
-                            onTap: _pickTime,
+                            onTap: () => _pickTime(false),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                               decoration: BoxDecoration(
@@ -255,11 +365,11 @@ class _CreatePreApprovedPassScreenState
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.access_time, size: 16, color: AppColors.accent),
+                                  const Icon(Icons.access_time_filled, size: 16, color: AppColors.statusRejected),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      _expectedTime.format(context),
+                                      _endTime.format(context),
                                       style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.bold),
                                     ),
                                   ),
@@ -272,6 +382,11 @@ class _CreatePreApprovedPassScreenState
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Security Warning: QR code scanner will reject the guest outside this selected time window.',
+                style: TextStyle(fontSize: 11, color: AppColors.statusRejected, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 28),
 

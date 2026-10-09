@@ -123,7 +123,7 @@ class ResidentService extends ChangeNotifier {
     }
   }
 
-  /// Resident creates a Pre-Approved Visitor Pass (e.g. for tonight's dinner guest or delivery)
+  /// Resident creates a Pre-Approved Visitor Pass with specific validity bounds
   Future<Visit> createPreApprovedPass({
     required String tenantId,
     required String residentId,
@@ -135,15 +135,19 @@ class ResidentService extends ChangeNotifier {
     required String visitorPhone,
     required VisitorType visitorType,
     required VisitPurpose purpose,
-    required DateTime expectedArrival,
+    required DateTime validFrom,
+    required DateTime validUntil,
+    int? guestCount,
+    String? vehicleNumber,
   }) async {
     final year = DateTime.now().year;
     final passId = 'PASS-$year-${(100000 + _db.visits.length + 1)}';
 
+    // In a real backend, these bounds are embedded in the token payload so scanners can enforce it offline.
     final secureToken = QrService.generateSecureVisitToken(
       tenantId: tenantId,
       visitId: passId,
-      entryTime: expectedArrival,
+      entryTime: validFrom,
     );
 
     final pass = Visit(
@@ -161,12 +165,16 @@ class ResidentService extends ChangeNotifier {
       entryGateName: 'Any Configured Gate',
       entryGuardId: 'resident_self',
       entryGuardName: residentName,
-      entryTimestamp: expectedArrival,
+      entryTimestamp: validFrom, // using validFrom as pseudo expected arrival
       status: VisitStatus.inside, // becomes active when presented
       approvalStatus: ApprovalStatus.approved, // auto-approved by resident
       secureVisitToken: secureToken,
       isPreApproved: true,
-      expectedArrivalTime: expectedArrival,
+      expectedArrivalTime: validFrom,
+      validFrom: validFrom,
+      validUntil: validUntil,
+      expectedGuestCount: guestCount,
+      vehicleNumber: vehicleNumber,
     );
 
     _db.visits.add(pass);
@@ -179,7 +187,7 @@ class ResidentService extends ChangeNotifier {
       action: 'PRE_APPROVED_PASS_CREATED',
       entityType: 'Visit',
       entityId: passId,
-      details: 'Created pre-approved pass for $visitorName arriving at $expectedArrival',
+      details: 'Created pre-approved pass for $visitorName with strict validity window.',
     );
 
     notifyListeners();
