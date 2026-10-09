@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:security_app/models/tenant.dart';
-import 'package:security_app/models/user.dart';
-import 'package:security_app/models/visitor_visit.dart';
-import 'package:security_app/models/sync_queue.dart';
-import 'package:security_app/services/mock_database.dart';
-import 'package:security_app/services/visitor_service.dart';
-import 'package:security_app/services/qr_service.dart';
-import 'package:security_app/services/subscription_service.dart';
-import 'package:security_app/services/sync_service.dart';
-import 'package:security_app/services/auth_service.dart';
+import 'package:security_app/features/resident/models/tenant.dart';
+import 'package:security_app/core/models/user.dart';
+import 'package:security_app/features/guard/models/visitor_visit.dart';
+import 'package:security_app/core/models/sync_queue.dart';
+import 'package:security_app/core/data/mock_database.dart';
+import 'package:security_app/features/guard/services/visitor_service.dart';
+import 'package:security_app/core/services/qr_service.dart';
+import 'package:security_app/features/super_admin/services/subscription_service.dart';
+import 'package:security_app/core/services/sync_service.dart';
+import 'package:security_app/features/auth/services/auth_service.dart';
 
 void main() {
   group('Critical Security & SaaS Platform Test Suite', () {
