@@ -11,25 +11,23 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  UserRole _selectedRole = UserRole.resident;
+  final _phoneController = TextEditingController();
+  final _otpController = TextEditingController();
   bool _isLoading = false;
+  bool _showOtpField = false;
   String? _error;
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _phoneController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      setState(() => _error = 'Please enter email and password');
+  Future<void> _handleSendOtp() async {
+    final phone = _phoneController.text.trim();
+    if (phone.length < 10) {
+      setState(() => _error = 'Please enter a valid 10-digit mobile number');
       return;
     }
 
@@ -39,14 +37,95 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     final authService = ref.read(authServiceProvider.notifier);
-    final success = await authService.login(email, password, _selectedRole);
+    // Smart lookup to see if the user exists
+    final user = await authService.lookupUserByPhone(phone);
+    
+    // In a real app we'd trigger an SMS here. 
+    // For our mock, we just move to the OTP screen and assume 1234 is the code.
+    await Future.delayed(const Duration(seconds: 1)); // simulate network
 
-    if (!success && mounted) {
+    if (mounted) {
       setState(() {
         _isLoading = false;
-        _error = 'Invalid email or password';
+        _showOtpField = true;
+        if (user == null) {
+          // Tell the user they aren't registered yet, but let them proceed to OTP to trigger Onboarding
+          _error = 'Number not found in Society Database. OTP sent for new registration.';
+        }
       });
     }
+  }
+
+  Future<void> _handleVerifyOtp() async {
+    final phone = _phoneController.text.trim();
+    final otp = _otpController.text.trim();
+
+    if (otp.length < 4) {
+      setState(() => _error = 'Please enter the 4-digit OTP');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final authService = ref.read(authServiceProvider.notifier);
+    final success = await authService.verifyOtpAndLogin(phone, otp);
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+      
+      if (!success) {
+        if (otp != '1234') {
+          setState(() => _error = 'Invalid OTP. Please try again.');
+        } else {
+          // Universal mock OTP '1234' was entered, but user not found in DB
+          // This routes to the new Onboarding Flow (which we mock here)
+          _showJoinSocietyDialog();
+        }
+      }
+    }
+  }
+
+  void _showJoinSocietyDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('Join a Society', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Your mobile number is verified, but it is not linked to any flat or society yet. Would you like to send a join request to your Society Admin?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() {
+                _showOtpField = false;
+                _phoneController.clear();
+                _otpController.clear();
+              });
+            },
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Join request sent! You will be notified when Admin approves.'), backgroundColor: Color(0xFF10B981)),
+              );
+              setState(() {
+                _showOtpField = false;
+                _phoneController.clear();
+                _otpController.clear();
+              });
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), elevation: 0),
+            child: const Text('Send Request', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -113,56 +192,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 32),
                   
-                  // Role Selector
-                  const Text(
-                    'SELECT LOGIN TYPE',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF64748B),
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: UserRole.values.map((role) {
-                      final isSelected = _selectedRole == role;
-                      return Semantics(
-                        button: true,
-                        label: 'Login as ${role.nameDisplay}',
-                        selected: isSelected,
-                        child: ChoiceChip(
-                          label: Text(role.nameDisplay),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() => _selectedRole = role);
-                            }
-                          },
-                          selectedColor: const Color(0xFF10B981).withValues(alpha: 0.2), // Mint Green light
-                          backgroundColor: Colors.white,
-                          labelStyle: TextStyle(
-                            color: isSelected ? const Color(0xFF10B981) : const Color(0xFF64748B),
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 13,
-                          ),
-                          side: BorderSide(
-                            color: isSelected ? const Color(0xFF10B981) : const Color(0xFFE2E8F0),
-                            width: isSelected ? 2 : 1,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-
                   // Login Form
                   Container(
                     padding: const EdgeInsets.all(24),
@@ -185,18 +214,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.red.shade50,
+                              color: _error!.contains('OTP sent') ? Colors.blue.shade50 : Colors.red.shade50,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.red.shade200),
+                              border: Border.all(color: _error!.contains('OTP sent') ? Colors.blue.shade200 : Colors.red.shade200),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
+                                Icon(
+                                  _error!.contains('OTP sent') ? Icons.info_outline : Icons.error_outline, 
+                                  color: _error!.contains('OTP sent') ? Colors.blue.shade600 : Colors.red.shade600, 
+                                  size: 20
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     _error!,
-                                    style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+                                    style: TextStyle(
+                                      color: _error!.contains('OTP sent') ? Colors.blue.shade700 : Colors.red.shade700, 
+                                      fontSize: 13
+                                    ),
                                   ),
                                 ),
                               ],
@@ -204,49 +240,102 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const SizedBox(height: 16),
                         ],
-                        _buildTextField(
-                          controller: _emailController,
-                          label: 'Email Address',
-                          icon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          controller: _passwordController,
-                          label: 'Password',
-                          icon: Icons.lock_outline,
-                          obscureText: true,
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: _isLoading ? null : _handleLogin,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10B981), // Positive Mint Green
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 0,
+
+                        if (!_showOtpField) ...[
+                          _buildTextField(
+                            controller: _phoneController,
+                            label: 'Mobile Number',
+                            icon: Icons.phone_android,
+                            keyboardType: TextInputType.phone,
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _handleSendOtp,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4F46E5), // Indigo
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Text(
+                                    'GET OTP',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.2,
+                                    ),
                                   ),
-                                )
-                              : const Text(
-                                  'SECURE LOGIN',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.2,
+                          ),
+                        ] else ...[
+                          // Display Mobile number being verified
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '+91 ${_phoneController.text}',
+                                style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              TextButton(
+                                onPressed: () => setState(() {
+                                  _showOtpField = false;
+                                  _error = null;
+                                  _otpController.clear();
+                                }),
+                                child: const Text('Edit', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _buildTextField(
+                            controller: _otpController,
+                            label: 'Enter 4-Digit OTP (Mock: 1234)',
+                            icon: Icons.message_outlined,
+                            keyboardType: TextInputType.number,
+                            obscureText: true,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _handleVerifyOtp,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10B981), // Positive Mint Green
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Text(
+                                    'VERIFY & SECURE LOGIN',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.0,
+                                    ),
                                   ),
-                                ),
-                        ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

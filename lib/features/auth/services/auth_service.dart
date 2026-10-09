@@ -32,6 +32,73 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Smart Phone Number Based Login Lookup
+  Future<AppUser?> lookupUserByPhone(String phone) async {
+    try {
+      final user = _db.users.firstWhere((u) => u.phone == phone);
+      return user;
+    } catch (_) {
+      return null; // User not found in mock DB
+    }
+  }
+
+  /// OTP Verification & Smart Login Routing
+  Future<bool> verifyOtpAndLogin(String phone, String otp) async {
+    // Mock OTP verification (1234 is universal mock OTP)
+    if (otp != '1234') return false;
+
+    try {
+      // Find user based purely on Phone Number
+      _currentUser = _db.users.firstWhere((u) => u.phone == phone);
+      
+      // Setup Tenant for the found user
+      if (_currentUser?.tenantId != null) {
+        _currentTenant = _db.tenants.firstWhere(
+          (t) => t.id == _currentUser!.tenantId,
+          orElse: () => _db.tenants.first,
+        );
+      } else {
+        _currentTenant = _db.tenants.first;
+      }
+
+      // If Guard, assign active gate
+      if (_currentUser?.role == UserRole.guard) {
+         _activeGate = _db.gates.firstWhere(
+          (g) => g.tenantId == _currentTenant!.id,
+          orElse: () => _db.gates.first,
+        );
+      } else {
+        _activeGate = null;
+      }
+
+      // Audit Log
+      if (_currentTenant != null) {
+        _auditService.logAction(
+          tenantId: _currentTenant!.id,
+          userId: _currentUser!.id,
+          userName: _currentUser!.name,
+          userRole: _currentUser!.role.nameDisplay,
+          action: 'USER_LOGIN',
+          entityType: 'User',
+          entityId: _currentUser!.id,
+          details: 'User authenticated via OTP with role ${_currentUser!.role.nameDisplay}',
+        );
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      // User not found in DB
+      return false;
+    }
+  }
+
+  /// Legacy Email/Password Login (Deprecated but kept for compatibility)
+  Future<bool> login(String email, String password, UserRole selectedRole) async {
+    // Left for testing compatibility if needed
+    return false;
+  }
+
   /// Switches active demo role seamlessly to test all 4 application modules & cross-gate exits
   void setDemoSession({
     required UserRole role,
@@ -97,36 +164,6 @@ class AuthService extends ChangeNotifier {
     }
 
     notifyListeners();
-  }
-
-  /// Login with specific role
-  Future<bool> login(String email, String password, UserRole selectedRole) async {
-    final lowerEmail = email.trim().toLowerCase();
-    
-    // Create a dynamic mock user based on the selected role explicitly!
-    _currentUser = AppUser(
-      id: 'dynamic_user_${DateTime.now().millisecondsSinceEpoch}',
-      name: lowerEmail.split('@').first.toUpperCase(),
-      email: lowerEmail,
-      phone: '9876543210',
-      role: selectedRole,
-      tenantId: 'tenant_sunrise',
-      flatId: selectedRole == UserRole.resident ? 'flat_b_1204' : null,
-      flatNumber: selectedRole == UserRole.resident ? 'B-1204' : null,
-      wingName: selectedRole == UserRole.resident ? 'Wing B' : null,
-      createdAt: DateTime.now(),
-    );
-
-    _currentTenant = _db.tenants.first;
-    
-    if (selectedRole == UserRole.guard) {
-      _activeGate = _db.gates.first;
-    } else {
-      _activeGate = null;
-    }
-
-    notifyListeners();
-    return true;
   }
 
   void logout() {
