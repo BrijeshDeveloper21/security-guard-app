@@ -24,6 +24,7 @@ class _ResidentProfileScreenState extends ConsumerState<ResidentProfileScreen> {
   void _showAddDialog(String type) {
     final titleCtrl = TextEditingController();
     final subtitleCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController(); // Added phone controller
 
     showDialog(
       context: context,
@@ -38,6 +39,14 @@ class _ResidentProfileScreenState extends ConsumerState<ResidentProfileScreen> {
               decoration: InputDecoration(labelText: type == 'Family Member' ? 'Name' : 'Vehicle Model'),
             ),
             const SizedBox(height: 12),
+            if (type == 'Family Member') ...[
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(labelText: 'Mobile Number'),
+              ),
+              const SizedBox(height: 12),
+            ],
             TextField(
               controller: subtitleCtrl,
               decoration: InputDecoration(labelText: type == 'Family Member' ? 'Relationship' : 'Registration Number'),
@@ -51,7 +60,7 @@ class _ResidentProfileScreenState extends ConsumerState<ResidentProfileScreen> {
               if (titleCtrl.text.isNotEmpty && subtitleCtrl.text.isNotEmpty) {
                 setState(() {
                   if (type == 'Family Member') {
-                    _familyMembers.add({'name': titleCtrl.text, 'relation': subtitleCtrl.text});
+                    _familyMembers.add({'name': titleCtrl.text, 'relation': subtitleCtrl.text, 'phone': phoneCtrl.text});
                   } else {
                     _vehicles.add({'name': titleCtrl.text, 'number': subtitleCtrl.text});
                   }
@@ -127,7 +136,7 @@ class _ResidentProfileScreenState extends ConsumerState<ResidentProfileScreen> {
             const SizedBox(height: 12),
             ..._familyMembers.map((fm) => _buildListItem(
                   title: fm['name']!,
-                  subtitle: fm['relation']!,
+                  subtitle: '${fm['relation']!} ${fm.containsKey('phone') && fm['phone']!.isNotEmpty ? '• ${fm['phone']}' : ''}',
                   icon: Icons.person_outline,
                 )),
             _buildAddButton(context, 'Family Member'),

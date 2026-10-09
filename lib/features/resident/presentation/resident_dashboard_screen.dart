@@ -14,6 +14,94 @@ import 'package:security_app/features/resident/presentation/resident_profile_scr
 class ResidentDashboardScreen extends ConsumerWidget {
   const ResidentDashboardScreen({super.key});
 
+  void _showSOSBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
+            const SizedBox(height: 12),
+            const Text(
+              'What is your emergency?',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Guards and Admins will be alerted immediately.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black54, fontSize: 13),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(child: _buildSOSTypeButton(context, 'Medical', '🚑', Colors.orange)),
+                const SizedBox(width: 12),
+                Expanded(child: _buildSOSTypeButton(context, 'Fire', '🔥', Colors.red)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: _buildSOSTypeButton(context, 'Security', '🛡️', Colors.blue.shade800)),
+                const SizedBox(width: 12),
+                Expanded(child: _buildSOSTypeButton(context, 'Lift Stuck', '🛗', Colors.purple)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSOSTypeButton(BuildContext context, String label, String emoji, Color color) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context); // Close bottom sheet
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.campaign, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('$label Emergency Alert Sent! Guards notified.', style: const TextStyle(fontWeight: FontWeight.bold))),
+              ],
+            ),
+            backgroundColor: color,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 32)),
+            const SizedBox(height: 8),
+            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
@@ -63,6 +151,12 @@ class ResidentDashboardScreen extends ConsumerWidget {
             onPressed: () => ref.read(authServiceProvider.notifier).logout(),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showSOSBottomSheet(context),
+        backgroundColor: Colors.red.shade600,
+        icon: const Icon(Icons.sos_rounded, color: Colors.white, size: 28),
+        label: const Text('SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
