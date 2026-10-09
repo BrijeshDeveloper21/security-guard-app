@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:security_app/core/providers/app_providers.dart';
 import 'package:security_app/core/models/user.dart'; // Import UserRole
+import 'join_society_screen.dart'; // Import the new Wizard
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -82,50 +83,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         } else {
           // Universal mock OTP '1234' was entered, but user not found in DB
           // This routes to the new Onboarding Flow (which we mock here)
-          _showJoinSocietyDialog();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const JoinSocietyScreen()),
+          ).then((_) {
+            // Reset state when coming back from wizard
+            setState(() {
+              _showOtpField = false;
+              _phoneController.clear();
+              _otpController.clear();
+              _error = null;
+            });
+          });
         }
       }
     }
-  }
-
-  void _showJoinSocietyDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('Join a Society', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Your mobile number is verified, but it is not linked to any flat or society yet. Would you like to send a join request to your Society Admin?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              setState(() {
-                _showOtpField = false;
-                _phoneController.clear();
-                _otpController.clear();
-              });
-            },
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Join request sent! You will be notified when Admin approves.'), backgroundColor: Color(0xFF10B981)),
-              );
-              setState(() {
-                _showOtpField = false;
-                _phoneController.clear();
-                _otpController.clear();
-              });
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), elevation: 0),
-            child: const Text('Send Request', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
