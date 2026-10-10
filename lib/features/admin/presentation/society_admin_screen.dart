@@ -21,7 +21,7 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
+    _tabController = TabController(length: 7, vsync: this);
   }
 
   @override
@@ -283,6 +283,7 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
             Tab(text: 'DASHBOARD'),
             Tab(text: 'GATES'),
             Tab(text: 'WINGS & FLATS'),
+            Tab(text: 'MAINTENANCE'),
             Tab(text: 'GUARDS'),
             Tab(text: 'RESIDENTS'),
             Tab(text: 'SUBSCRIPTION'),
@@ -515,7 +516,84 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
             ),
           ),
 
-          // 4. Guards Management Tab
+          // 4. Maintenance Management Tab
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Maintenance Dues (${flats.length})', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                ...flats.map((f) {
+                  // Mock logic: Flats starting with A are paid, B are pending
+                  final bool isPending = f.flatNumber.startsWith('B');
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.borderLight),
+                      boxShadow: const [
+                        BoxShadow(color: AppColors.shadowLight, blurRadius: 6, offset: Offset(0, 2))
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Flat ${f.flatNumber} (${f.wingName})',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              f.residentName != null ? 'Resident: ${f.residentName}' : 'Vacant / Unassigned',
+                              style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isPending ? 'Due: ₹3,500' : 'Maintenance Cleared',
+                              style: TextStyle(
+                                fontSize: 13, 
+                                fontWeight: FontWeight.bold,
+                                color: isPending ? AppColors.statusRejected : AppColors.statusApproved,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (isPending)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('WhatsApp/App Reminder sent to Flat ${f.flatNumber} for pending maintenance!'),
+                                  backgroundColor: AppColors.statusPending,
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.send_rounded, size: 16),
+                            label: const Text('REMINDER', style: TextStyle(fontSize: 12)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            ),
+                          )
+                        else
+                          const Icon(Icons.check_circle, color: AppColors.statusApproved, size: 28),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+
+          // 5. Guards Management Tab
           SingleChildScrollView(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -578,7 +656,7 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
             ),
           ),
 
-          // 5. Residents Tab
+          // 6. Residents Tab
           SingleChildScrollView(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -624,7 +702,7 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
             ),
           ),
 
-          // 6. Subscription Tab
+          // 7. Subscription Tab
           SingleChildScrollView(
             padding: const EdgeInsets.all(18),
             child: Column(

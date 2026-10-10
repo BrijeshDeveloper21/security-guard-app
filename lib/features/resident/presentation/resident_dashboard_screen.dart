@@ -66,37 +66,41 @@ class ResidentDashboardScreen extends ConsumerWidget {
   }
 
   Widget _buildSOSTypeButton(BuildContext context, String label, String emoji, Color color) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context); // Close bottom sheet
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.campaign, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(child: Text('$label Emergency Alert Sent! Guards notified.', style: const TextStyle(fontWeight: FontWeight.bold))),
-              ],
+    return Semantics(
+      button: true,
+      label: '$label Emergency',
+      child: InkWell(
+        onTap: () {
+          Navigator.pop(context); // Close bottom sheet
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.campaign, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('$label Emergency Alert Sent! Guards notified.', style: const TextStyle(fontWeight: FontWeight.bold))),
+                ],
+              ),
+              backgroundColor: color,
+              duration: const Duration(seconds: 4),
             ),
-            backgroundColor: color,
-            duration: const Duration(seconds: 4),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
-        );
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 32)),
-            const SizedBox(height: 8),
-            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14)),
-          ],
+          child: Column(
+            children: [
+              Text(emoji, style: const TextStyle(fontSize: 32)),
+              const SizedBox(height: 8),
+              Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14)),
+            ],
+          ),
         ),
       ),
     );
