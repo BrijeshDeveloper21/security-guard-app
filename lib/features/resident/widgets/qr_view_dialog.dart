@@ -36,10 +36,11 @@ class _QrViewDialogState extends State<QrViewDialog> {
         final imagePath = await File('${directory.path}/gatepass_${widget.visit.id}.png').create();
         await imagePath.writeAsBytes(image);
 
-        // Share the generated image using share_plus
-        await Share.shareXFiles(
-          [XFile(imagePath.path)],
-          text: 'Here is your security gate pass for ${widget.visit.wingName} - Flat ${widget.visit.flatNumber}. Show this QR at the gate.',
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(imagePath.path)],
+            text: 'Here is your security gate pass for ${widget.visit.wingName} - Flat ${widget.visit.flatNumber}. Show this QR at the gate.',
+          ),
         );
       }
     } catch (e) {

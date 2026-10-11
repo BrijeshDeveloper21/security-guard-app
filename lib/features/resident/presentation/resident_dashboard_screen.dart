@@ -11,6 +11,8 @@ import 'package:security_app/features/resident/presentation/create_pre_approved_
 import 'package:security_app/features/resident/presentation/maintenance_billing_screen.dart';
 import 'package:security_app/features/resident/presentation/helpdesk_screen.dart';
 import 'package:security_app/features/resident/presentation/resident_profile_screen.dart';
+import 'package:security_app/features/settings/presentation/app_settings_screen.dart';
+
 class ResidentDashboardScreen extends ConsumerWidget {
   const ResidentDashboardScreen({super.key});
 
@@ -18,19 +20,29 @@ class ResidentDashboardScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.red,
+              size: 48,
+            ),
             const SizedBox(height: 12),
             const Text(
               'What is your emergency?',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -41,23 +53,52 @@ class ResidentDashboardScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: _buildSOSTypeButton(context, 'Medical', '🚑', Colors.orange)),
+                Expanded(
+                  child: _buildSOSTypeButton(
+                    context,
+                    'Medical',
+                    '🚑',
+                    Colors.orange,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildSOSTypeButton(context, 'Fire', '🔥', Colors.red)),
+                Expanded(
+                  child: _buildSOSTypeButton(context, 'Fire', '🔥', Colors.red),
+                ),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _buildSOSTypeButton(context, 'Security', '🛡️', Colors.blue.shade800)),
+                Expanded(
+                  child: _buildSOSTypeButton(
+                    context,
+                    'Security',
+                    '🛡️',
+                    Colors.blue.shade800,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _buildSOSTypeButton(context, 'Lift Stuck', '🛗', Colors.purple)),
+                Expanded(
+                  child: _buildSOSTypeButton(
+                    context,
+                    'Lift Stuck',
+                    '🛗',
+                    Colors.purple,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 24),
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('CANCEL', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'CANCEL',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -65,7 +106,12 @@ class ResidentDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSOSTypeButton(BuildContext context, String label, String emoji, Color color) {
+  Widget _buildSOSTypeButton(
+    BuildContext context,
+    String label,
+    String emoji,
+    Color color,
+  ) {
     return Semantics(
       button: true,
       label: '$label Emergency',
@@ -78,7 +124,12 @@ class ResidentDashboardScreen extends ConsumerWidget {
                 children: [
                   const Icon(Icons.campaign, color: Colors.white),
                   const SizedBox(width: 12),
-                  Expanded(child: Text('$label Emergency Alert Sent! Guards notified.', style: const TextStyle(fontWeight: FontWeight.bold))),
+                  Expanded(
+                    child: Text(
+                      '$label Emergency Alert Sent! Guards notified.',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               ),
               backgroundColor: color,
@@ -98,7 +149,14 @@ class ResidentDashboardScreen extends ConsumerWidget {
             children: [
               Text(emoji, style: const TextStyle(fontSize: 32)),
               const SizedBox(height: 8),
-              Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
         ),
@@ -140,15 +198,30 @@ class ResidentDashboardScreen extends ConsumerWidget {
           children: [
             Text(
               'Flat $flatNumber • ${user?.wingName ?? "Wing B"}',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Theme.of(context).colorScheme.onSurface),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             Text(
               tenant?.name ?? 'Sunrise Heights',
-              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: ref
+                .watch(languageProvider.notifier)
+                .translate('settings_title'),
+            icon: const Icon(Icons.tune_rounded),
+            onPressed: () => AppSettingsScreen.open(context),
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.statusRejected),
             tooltip: 'Logout',
@@ -160,7 +233,14 @@ class ResidentDashboardScreen extends ConsumerWidget {
         onPressed: () => _showSOSBottomSheet(context),
         backgroundColor: Colors.red.shade600,
         icon: const Icon(Icons.sos_rounded, color: Colors.white, size: 28),
-        label: const Text('SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16)),
+        label: const Text(
+          'SOS',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 16,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(18),
@@ -172,7 +252,10 @@ class ResidentDashboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFF59E0B), Color(0xFFB45309)], // Stunning Premium Yellow/Gold
+                  colors: [
+                    Color(0xFFF59E0B),
+                    Color(0xFFB45309),
+                  ], // Stunning Premium Yellow/Gold
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -188,15 +271,29 @@ class ResidentDashboardScreen extends ConsumerWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Welcome home,', style: TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.bold)),
+                          const Text(
+                            'Welcome home,',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           Text(
                             user?.name ?? 'Resident',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
                           ),
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
@@ -204,7 +301,11 @@ class ResidentDashboardScreen extends ConsumerWidget {
                         ),
                         child: Text(
                           'Flat $flatNumber',
-                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -214,13 +315,26 @@ class ResidentDashboardScreen extends ConsumerWidget {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const CreatePreApprovedPassScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const CreatePreApprovedPassScreen(),
+                        ),
                       );
                     },
-                    icon: const Icon(Icons.add_task_rounded, size: 20, color: Colors.black),
-                    label: const Text('PRE-APPROVE VISITOR', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
+                    icon: const Icon(
+                      Icons.add_task_rounded,
+                      size: 20,
+                      color: Colors.black,
+                    ),
+                    label: const Text(
+                      'PRE-APPROVE VISITOR',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white, // White button on yellow background
+                      backgroundColor:
+                          Colors.white, // White button on yellow background
                       minimumSize: const Size(double.infinity, 48),
                     ),
                   ),
@@ -235,7 +349,9 @@ class ResidentDashboardScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    ref.watch(languageProvider.notifier).translate('visitor_approval_req'),
+                    ref
+                        .watch(languageProvider.notifier)
+                        .translate('visitor_approval_req'),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
@@ -244,7 +360,10 @@ class ResidentDashboardScreen extends ConsumerWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.statusPending.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
@@ -273,12 +392,17 @@ class ResidentDashboardScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.statusPending.withValues(alpha: 0.08),
+                          color: AppColors.statusPending.withValues(
+                            alpha: 0.08,
+                          ),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
                       ],
-                      border: Border.all(color: AppColors.statusPending.withValues(alpha: 0.3), width: 1.5),
+                      border: Border.all(
+                        color: AppColors.statusPending.withValues(alpha: 0.3),
+                        width: 1.5,
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,12 +411,19 @@ class ResidentDashboardScreen extends ConsumerWidget {
                           children: [
                             CircleAvatar(
                               radius: 28,
-                              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
                               backgroundImage: req.visitorPhotoUrl != null
                                   ? NetworkImage(req.visitorPhotoUrl!)
                                   : null,
                               child: req.visitorPhotoUrl == null
-                                  ? Icon(Icons.person, color: Theme.of(context).colorScheme.onSurfaceVariant)
+                                  ? Icon(
+                                      Icons.person,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    )
                                   : null,
                             ),
                             const SizedBox(width: 14),
@@ -305,22 +436,37 @@ class ResidentDashboardScreen extends ConsumerWidget {
                                     style: TextStyle(
                                       fontSize: 17,
                                       fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     '${req.visitorPhone} • ${req.purpose.nameDisplay}',
-                                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      const Icon(Icons.location_on, size: 14, color: AppColors.primary),
+                                      const Icon(
+                                        Icons.location_on,
+                                        size: 14,
+                                        color: AppColors.primary,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         'Waiting at: ${req.entryGateName}',
-                                        style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -346,12 +492,20 @@ class ResidentDashboardScreen extends ConsumerWidget {
                                     );
                                   },
                                   style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: AppColors.statusRejected),
+                                    side: const BorderSide(
+                                      color: AppColors.statusRejected,
+                                    ),
                                     foregroundColor: AppColors.statusRejected,
                                     minimumSize: const Size(0, 48),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                  child: Text(ref.watch(languageProvider.notifier).translate('reject')),
+                                  child: Text(
+                                    ref
+                                        .watch(languageProvider.notifier)
+                                        .translate('reject'),
+                                  ),
                                 ),
                               ),
                             ),
@@ -374,9 +528,15 @@ class ResidentDashboardScreen extends ConsumerWidget {
                                     foregroundColor: Colors.white,
                                     minimumSize: const Size(0, 48),
                                     elevation: 0,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                  child: Text(ref.watch(languageProvider.notifier).translate('approve')),
+                                  child: Text(
+                                    ref
+                                        .watch(languageProvider.notifier)
+                                        .translate('approve'),
+                                  ),
                                 ),
                               ),
                             ),
@@ -392,7 +552,9 @@ class ResidentDashboardScreen extends ConsumerWidget {
 
             // RESIDENT QUICK ACTIONS (Phase 3 Features)
             Text(
-              ref.watch(languageProvider.notifier).translate('resident_services'),
+              ref
+                  .watch(languageProvider.notifier)
+                  .translate('resident_services'),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
@@ -407,10 +569,17 @@ class ResidentDashboardScreen extends ConsumerWidget {
                   child: _buildActionCard(
                     context,
                     icon: Icons.receipt_long,
-                    title: ref.watch(languageProvider.notifier).translate('pay_bills'),
+                    title: ref
+                        .watch(languageProvider.notifier)
+                        .translate('pay_bills'),
                     color: Colors.orange,
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const MaintenanceBillingScreen()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MaintenanceBillingScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -419,10 +588,17 @@ class ResidentDashboardScreen extends ConsumerWidget {
                   child: _buildActionCard(
                     context,
                     icon: Icons.support_agent,
-                    title: ref.watch(languageProvider.notifier).translate('helpdesk'),
+                    title: ref
+                        .watch(languageProvider.notifier)
+                        .translate('helpdesk'),
                     color: Colors.amber, // Made yellow to match theme
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpdeskScreen()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const HelpdeskScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -431,10 +607,17 @@ class ResidentDashboardScreen extends ConsumerWidget {
                   child: _buildActionCard(
                     context,
                     icon: Icons.family_restroom,
-                    title: ref.watch(languageProvider.notifier).translate('my_profile'),
+                    title: ref
+                        .watch(languageProvider.notifier)
+                        .translate('my_profile'),
                     color: Colors.amber, // Made yellow to match theme
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ResidentProfileScreen()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ResidentProfileScreen(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -465,7 +648,10 @@ class ResidentDashboardScreen extends ConsumerWidget {
                 child: Center(
                   child: Text(
                     'No visitor records recorded yet for this flat',
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               )
@@ -483,16 +669,28 @@ class ResidentDashboardScreen extends ConsumerWidget {
                         color: AppColors.shadowLight,
                         blurRadius: 8,
                         offset: Offset(0, 2),
-                      )
+                      ),
                     ],
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                        backgroundImage: v.visitorPhotoUrl != null ? NetworkImage(v.visitorPhotoUrl!) : null,
-                        child: v.visitorPhotoUrl == null ? Icon(Icons.person, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant) : null,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        backgroundImage: v.visitorPhotoUrl != null
+                            ? NetworkImage(v.visitorPhotoUrl!)
+                            : null,
+                        child: v.visitorPhotoUrl == null
+                            ? Icon(
+                                Icons.person,
+                                size: 20,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              )
+                            : null,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -504,7 +702,13 @@ class ResidentDashboardScreen extends ConsumerWidget {
                               children: [
                                 Text(
                                   v.visitorName,
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Theme.of(context).colorScheme.onSurface),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface,
+                                  ),
                                 ),
                                 StatusChip.fromVisitStatus(v.status),
                               ],
@@ -512,18 +716,33 @@ class ResidentDashboardScreen extends ConsumerWidget {
                             const SizedBox(height: 2),
                             Text(
                               '${v.visitorType.iconAsset} ${v.purpose.nameDisplay} • ${v.id}',
-                              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${dateFormatter.format(v.entryTimestamp)} ${timeFormatter.format(v.entryTimestamp)} (${v.entryGateName})',
-                              style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant
+                                    .withValues(alpha: 0.7),
+                              ),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.qr_code, color: AppColors.primary, size: 22),
+                        icon: const Icon(
+                          Icons.qr_code,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
                         tooltip: 'View Pass',
                         onPressed: () {
                           showDialog(
@@ -566,7 +785,7 @@ class ResidentDashboardScreen extends ConsumerWidget {
                 color: AppColors.shadowLight,
                 blurRadius: 8,
                 offset: Offset(0, 2),
-              )
+              ),
             ],
           ),
           child: Column(

@@ -7,7 +7,6 @@ import 'package:security_app/features/guard/models/visitor_visit.dart';
 import 'package:security_app/core/providers/app_providers.dart';
 import 'package:security_app/core/theme/app_colors.dart';
 import 'package:security_app/core/widgets/camera_capture_dialog.dart';
-import 'package:security_app/features/resident/widgets/qr_view_dialog.dart';
 
 class NewVisitorScreen extends ConsumerStatefulWidget {
   final bool isDeliveryOnly;
@@ -251,19 +250,26 @@ class _NewVisitorScreenState extends ConsumerState<NewVisitorScreen> {
                       onPressed: () async {
                         final tenant = ref.read(currentTenantProvider);
                         final user = ref.read(currentUserProvider);
+                        final navigator = Navigator.of(context);
+                        final messenger = ScaffoldMessenger.of(context);
+
                         await ref.read(visitorServiceProvider).forceAdmit(
-                          tenantId: tenant!.id, 
-                          visitId: visit.id, 
-                          guardId: user!.id, 
-                          guardName: user.name
+                          tenantId: tenant!.id,
+                          visitId: visit.id,
+                          guardId: user!.id,
+                          guardName: user.name,
                         );
-                        if (mounted) {
-                          Navigator.pop(ctx);
-                          Navigator.pop(context); // Close new visitor screen
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Visitor Admitted (Override)'), backgroundColor: AppColors.statusApproved),
-                          );
-                        }
+
+                        if (!mounted) return;
+
+                        navigator.pop();
+                        navigator.pop();
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Visitor Admitted (Override)'),
+                            backgroundColor: AppColors.statusApproved,
+                          ),
+                        );
                       },
                       icon: const Icon(Icons.security, size: 18),
                       label: const Text('Admit'),

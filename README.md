@@ -74,6 +74,32 @@ The platform provides an **extremely fast and simple 10–15s interface for secu
 
 ---
 
+## ♿ Accessibility & Language Preferences
+
+The app includes persistent, app-wide display preferences:
+
+- **Languages:** English, Hindi, and Marathi. Flutter's Material, Widgets, and
+  Cupertino controls use the selected locale. The login and accessibility
+  settings flows, plus selected guard and resident dashboard labels, have
+  application-provided translations; remaining feature copy is still being
+  localized and may appear in English.
+- **Text size:** Adjustable from 90% to 160%. The app setting composes with,
+  rather than replaces, the device's system text scaling.
+- **High contrast:** A high-contrast light theme can be enabled manually. The
+  app also honors the operating system's high-contrast preference.
+- **Persistence:** Language and accessibility preferences are stored locally
+  on the device and restored at startup. Storage failures are surfaced in the
+  UI; failed writes do not report success.
+- **Interaction:** The login feature carousel is user-controlled (no automatic
+  rotation), and settings, carousel controls, form labels, and important
+  navigation actions expose accessible names and states.
+
+These features are accessibility improvements, not a claim of W3C/WCAG
+conformance. Before production sign-off, test every role and workflow with
+keyboard-only navigation, screen readers, browser zoom, and a WCAG 2.2 AA
+contrast/accessibility audit. Some legacy screens still use fixed colors and
+English text and need a broader content pass.
+
 ## 🔒 Security & Multi-Tenancy Architecture
 
 | Feature | Implementation Details |

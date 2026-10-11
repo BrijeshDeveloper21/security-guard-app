@@ -6,6 +6,8 @@ import 'package:security_app/features/resident/models/flat.dart';
 import 'package:security_app/features/resident/models/guard_resident.dart';
 import 'package:security_app/core/providers/app_providers.dart';
 import 'package:security_app/core/theme/app_colors.dart';
+import 'package:security_app/core/theme/app_theme.dart';
+import 'package:security_app/features/settings/presentation/app_settings_screen.dart';
 
 class SocietyAdminScreen extends ConsumerStatefulWidget {
   const SocietyAdminScreen({super.key});
@@ -41,32 +43,50 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: AppColors.surfaceDark,
-          title: const Text('Add Dynamic Gate', style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Gate Name (e.g. Gate D - Service)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: codeCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Gate Code (e.g. GATE-D)'),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<GateType>(
-                initialValue: selectedType,
-                dropdownColor: AppColors.surfaceDark,
-                style: const TextStyle(color: Colors.white),
-                items: GateType.values.map((t) => DropdownMenuItem(value: t, child: Text(t.nameDisplay))).toList(),
-                onChanged: (val) {
-                  if (val != null) setDialogState(() => selectedType = val);
-                },
-              ),
-            ],
+          title: const Text(
+            'Add Dynamic Gate',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Theme(
+            data: Theme.of(context)
+                .copyWith(inputDecorationTheme: AppTheme.dialogInputTheme),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Gate Name (e.g. Gate D - Service)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: codeCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Gate Code (e.g. GATE-D)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<GateType>(
+                  initialValue: selectedType,
+                  dropdownColor: AppColors.surfaceDark,
+                  style: const TextStyle(color: Colors.white),
+                  items: GateType.values
+                      .map(
+                        (t) => DropdownMenuItem(
+                          value: t,
+                          child: Text(t.nameDisplay),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedType = val);
+                  },
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -76,18 +96,23 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
             ElevatedButton(
               onPressed: () {
                 if (nameCtrl.text.isNotEmpty && codeCtrl.text.isNotEmpty) {
-                  ref.read(gateServiceProvider).addGate(
-                    tenantId: tenantId,
-                    name: nameCtrl.text.trim(),
-                    code: codeCtrl.text.trim(),
-                    type: selectedType,
-                    adminUserId: adminId,
-                    adminUserName: adminName,
-                  );
+                  ref
+                      .read(gateServiceProvider)
+                      .addGate(
+                        tenantId: tenantId,
+                        name: nameCtrl.text.trim(),
+                        code: codeCtrl.text.trim(),
+                        type: selectedType,
+                        adminUserId: adminId,
+                        adminUserName: adminName,
+                      );
                   Navigator.pop(ctx);
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                minimumSize: const Size(0, 46),
+              ),
               child: const Text('Add Gate'),
             ),
           ],
@@ -97,7 +122,12 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
   }
 
   // --- Add Flat Dialog ---
-  void _showAddFlatDialog(String tenantId, String adminId, String adminName, List<Wing> wings) {
+  void _showAddFlatDialog(
+    String tenantId,
+    String adminId,
+    String adminName,
+    List<Wing> wings,
+  ) {
     if (wings.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please add at least one wing first')),
@@ -116,58 +146,80 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: AppColors.surfaceDark,
           title: const Text('Add Flat', style: TextStyle(color: Colors.white)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<Wing>(
-                initialValue: selectedWing,
-                dropdownColor: AppColors.surfaceDark,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Select Wing'),
-                items: wings.map((w) => DropdownMenuItem(value: w, child: Text(w.name))).toList(),
-                onChanged: (val) {
-                  if (val != null) setDialogState(() => selectedWing = val);
-                },
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: flatNumCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Flat Number (e.g. B-1205)'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: resNameCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Resident Name'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: resPhoneCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Resident Phone'),
-              ),
-            ],
+          content: Theme(
+            data: Theme.of(context)
+                .copyWith(inputDecorationTheme: AppTheme.dialogInputTheme),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<Wing>(
+                  initialValue: selectedWing,
+                  dropdownColor: AppColors.surfaceDark,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(labelText: 'Select Wing'),
+                  items: wings
+                      .map(
+                        (w) => DropdownMenuItem(value: w, child: Text(w.name)),
+                      )
+                      .toList(),
+                  onChanged: (val) {
+                    if (val != null) setDialogState(() => selectedWing = val);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: flatNumCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Flat Number (e.g. B-1205)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: resNameCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(labelText: 'Resident Name'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: resPhoneCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Resident Phone',
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
             ElevatedButton(
               onPressed: () {
                 if (flatNumCtrl.text.isNotEmpty) {
-                  ref.read(societyServiceProvider).addFlat(
-                    tenantId: tenantId,
-                    wingId: selectedWing.id,
-                    wingName: selectedWing.name,
-                    flatNumber: flatNumCtrl.text.trim(),
-                    floor: 1,
-                    residentName: resNameCtrl.text.trim().isNotEmpty ? resNameCtrl.text.trim() : null,
-                    residentPhone: resPhoneCtrl.text.trim().isNotEmpty ? resPhoneCtrl.text.trim() : null,
-                    adminId: adminId,
-                    adminName: adminName,
-                  );
+                  ref
+                      .read(societyServiceProvider)
+                      .addFlat(
+                        tenantId: tenantId,
+                        wingId: selectedWing.id,
+                        wingName: selectedWing.name,
+                        flatNumber: flatNumCtrl.text.trim(),
+                        floor: 1,
+                        residentName: resNameCtrl.text.trim().isNotEmpty
+                            ? resNameCtrl.text.trim()
+                            : null,
+                        residentPhone: resPhoneCtrl.text.trim().isNotEmpty
+                            ? resPhoneCtrl.text.trim()
+                            : null,
+                        adminId: adminId,
+                        adminName: adminName,
+                      );
                   Navigator.pop(ctx);
                 }
               },
+              style: ElevatedButton.styleFrom(minimumSize: const Size(0, 46)),
               child: const Text('Add Flat'),
             ),
           ],
@@ -205,23 +257,34 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                   color: AppColors.shadowLight,
                   blurRadius: 16,
                   offset: Offset(0, 4),
-                )
+                ),
               ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.warning_amber_rounded, size: 64, color: AppColors.statusRejected),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 64,
+                  color: AppColors.statusRejected,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'SUBSCRIPTION EXPIRED',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'The subscription for ${tenant.name} expired on ${tenant.subscriptionExpiresAt.toLocal().toString().split(" ")[0]}. Historical records are preserved.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
@@ -231,7 +294,11 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                       status: SubscriptionStatus.active,
                     );
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.statusApproved, foregroundColor: Colors.white, elevation: 0),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.statusApproved,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                  ),
                   child: const Text('RENEW SUBSCRIPTION NOW'),
                 ),
               ],
@@ -247,7 +314,6 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
     final flats = societyService.getFlats(tenant.id);
     final guards = societyService.getGuards(tenant.id);
     final residents = societyService.getResidents(tenant.id);
-    final subscription = subService.getSubscriptionForTenant(tenant.id);
     final plan = subService.getPlanById(tenant.subscriptionPlanId);
 
     return Scaffold(
@@ -258,15 +324,29 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
           children: [
             Text(
               tenant.name,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             Text(
               'Society Admin Console • Plan: ${plan?.name ?? "Standard"}',
-              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: ref
+                .watch(languageProvider.notifier)
+                .translate('settings_title'),
+            icon: const Icon(Icons.tune_rounded),
+            onPressed: () => AppSettingsScreen.open(context),
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.statusRejected),
             tooltip: 'Logout',
@@ -299,7 +379,15 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('TODAY\'S ACTIVITY METRICS', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13, letterSpacing: 0.5)),
+                Text(
+                  'TODAY\'S ACTIVITY METRICS',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                    letterSpacing: 0.5,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 GridView.count(
                   crossAxisCount: 2,
@@ -309,12 +397,42 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                   mainAxisSpacing: 12,
                   childAspectRatio: 1.6,
                   children: [
-                    _buildKpiCard('Visitors Today', '${stats.visitorsToday}', Icons.people_alt, Colors.blue),
-                    _buildKpiCard('Currently Inside', '${stats.currentlyInside}', Icons.login_rounded, AppColors.statusInside),
-                    _buildKpiCard('Pending Approvals', '${stats.pendingApprovals}', Icons.hourglass_top, AppColors.statusPending),
-                    _buildKpiCard('Exited Today', '${stats.exitedToday}', Icons.logout_rounded, AppColors.statusExited),
-                    _buildKpiCard('Active Guards', '${stats.activeGuards}', Icons.security, AppColors.statusApproved),
-                    _buildKpiCard('Configured Gates', '${stats.activeGates}', Icons.meeting_room, AppColors.primary),
+                    _buildKpiCard(
+                      'Visitors Today',
+                      '${stats.visitorsToday}',
+                      Icons.people_alt,
+                      Colors.blue,
+                    ),
+                    _buildKpiCard(
+                      'Currently Inside',
+                      '${stats.currentlyInside}',
+                      Icons.login_rounded,
+                      AppColors.statusInside,
+                    ),
+                    _buildKpiCard(
+                      'Pending Approvals',
+                      '${stats.pendingApprovals}',
+                      Icons.hourglass_top,
+                      AppColors.statusPending,
+                    ),
+                    _buildKpiCard(
+                      'Exited Today',
+                      '${stats.exitedToday}',
+                      Icons.logout_rounded,
+                      AppColors.statusExited,
+                    ),
+                    _buildKpiCard(
+                      'Active Guards',
+                      '${stats.activeGuards}',
+                      Icons.security,
+                      AppColors.statusApproved,
+                    ),
+                    _buildKpiCard(
+                      'Configured Gates',
+                      '${stats.activeGates}',
+                      Icons.meeting_room,
+                      AppColors.primary,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -331,19 +449,42 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                         color: AppColors.shadowLight,
                         blurRadius: 10,
                         offset: Offset(0, 4),
-                      )
+                      ),
                     ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('BUILDING PROFILE', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                      const Text(
+                        'BUILDING PROFILE',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
                       const SizedBox(height: 12),
-                      Text('Address: ${tenant.address}, ${tenant.city}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15)),
+                      Text(
+                        'Address: ${tenant.address}, ${tenant.city}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 15,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text('Contact: ${tenant.contactPhone} • ${tenant.contactEmail}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                      Text(
+                        'Contact: ${tenant.contactPhone} • ${tenant.contactEmail}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      Text('Timezone: ${tenant.timezone}', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                      Text(
+                        'Timezone: ${tenant.timezone}',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -359,17 +500,34 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Gates (${gates.length})', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Gates (${gates.length})',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Semantics(
                       label: 'Add New Gate',
                       button: true,
                       child: Tooltip(
                         message: 'Add New Gate',
                         child: ElevatedButton.icon(
-                          onPressed: () => _showAddGateDialog(tenant.id, user!.id, user.name),
+                          onPressed: () => _showAddGateDialog(
+                            tenant.id,
+                            user!.id,
+                            user.name,
+                          ),
                           icon: const Icon(Icons.add, size: 18),
                           label: const Text('Add Gate'),
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, elevation: 0),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            minimumSize: const Size(0, 44),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                          ),
                         ),
                       ),
                     ),
@@ -389,15 +547,19 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                           color: AppColors.shadowLight,
                           blurRadius: 6,
                           offset: Offset(0, 2),
-                        )
+                        ),
                       ],
                     ),
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                          backgroundColor: AppColors.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           child: Icon(
-                            g.type == GateType.parking ? Icons.local_parking : Icons.meeting_room,
+                            g.type == GateType.parking
+                                ? Icons.local_parking
+                                : Icons.meeting_room,
                             color: AppColors.primary,
                           ),
                         ),
@@ -406,8 +568,25 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(g.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
-                              Text('${g.code} • ${g.type.nameDisplay}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                              Text(
+                                g.name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface,
+                                ),
+                              ),
+                              Text(
+                                '${g.code} • ${g.type.nameDisplay}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -441,17 +620,35 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Flats (${flats.length})', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Flats (${flats.length})',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     Semantics(
                       label: 'Add New Flat',
                       button: true,
                       child: Tooltip(
                         message: 'Add New Flat',
                         child: ElevatedButton.icon(
-                          onPressed: () => _showAddFlatDialog(tenant.id, user!.id, user.name, wings),
+                          onPressed: () => _showAddFlatDialog(
+                            tenant.id,
+                            user!.id,
+                            user.name,
+                            wings,
+                          ),
                           icon: const Icon(Icons.add, size: 18),
                           label: const Text('Add Flat'),
-                          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, elevation: 0),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            minimumSize: const Size(0, 44),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                          ),
                         ),
                       ),
                     ),
@@ -471,38 +668,66 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                           color: AppColors.shadowLight,
                           blurRadius: 6,
                           offset: Offset(0, 2),
-                        )
+                        ),
                       ],
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Flat ${f.flatNumber} (${f.wingName})',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              f.residentName != null
-                                  ? 'Resident: ${f.residentName} (${f.residentPhone ?? ""})'
-                                  : 'Vacant / Unassigned',
-                              style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                            ),
-                          ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Flat ${f.flatNumber} (${f.wingName})',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                f.residentName != null
+                                    ? 'Resident: ${f.residentName} (${f.residentPhone ?? ""})'
+                                    : 'Vacant / Unassigned',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: f.isOccupied ? AppColors.statusApproved.withValues(alpha: 0.1) : AppColors.textMutedLight.withValues(alpha: 0.1),
+                            color: f.isOccupied
+                                ? AppColors.statusApproved.withValues(
+                                    alpha: 0.1,
+                                  )
+                                : AppColors.textMutedLight.withValues(
+                                    alpha: 0.1,
+                                  ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             f.isOccupied ? 'Occupied' : 'Vacant',
                             style: TextStyle(
-                              color: f.isOccupied ? AppColors.statusApproved : AppColors.textSecondaryLight,
+                              color: f.isOccupied
+                                  ? AppColors.statusApproved
+                                  : AppColors.textSecondaryLight,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -522,12 +747,19 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Maintenance Dues (${flats.length})', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  'Maintenance Dues (${flats.length})',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 ...flats.map((f) {
                   // Mock logic: Flats starting with A are paid, B are pending
                   final bool isPending = f.flatNumber.startsWith('B');
-                  
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(16),
@@ -536,7 +768,11 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppColors.borderLight),
                       boxShadow: const [
-                        BoxShadow(color: AppColors.shadowLight, blurRadius: 6, offset: Offset(0, 2))
+                        BoxShadow(
+                          color: AppColors.shadowLight,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
                       ],
                     ),
                     child: Row(
@@ -547,20 +783,33 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                           children: [
                             Text(
                               'Flat ${f.flatNumber} (${f.wingName})',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              f.residentName != null ? 'Resident: ${f.residentName}' : 'Vacant / Unassigned',
-                              style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              f.residentName != null
+                                  ? 'Resident: ${f.residentName}'
+                                  : 'Vacant / Unassigned',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               isPending ? 'Due: ₹3,500' : 'Maintenance Cleared',
                               style: TextStyle(
-                                fontSize: 13, 
+                                fontSize: 13,
                                 fontWeight: FontWeight.bold,
-                                color: isPending ? AppColors.statusRejected : AppColors.statusApproved,
+                                color: isPending
+                                    ? AppColors.statusRejected
+                                    : AppColors.statusApproved,
                               ),
                             ),
                           ],
@@ -570,21 +819,34 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('WhatsApp/App Reminder sent to Flat ${f.flatNumber} for pending maintenance!'),
+                                  content: Text(
+                                    'WhatsApp/App Reminder sent to Flat ${f.flatNumber} for pending maintenance!',
+                                  ),
                                   backgroundColor: AppColors.statusPending,
                                 ),
                               );
                             },
                             icon: const Icon(Icons.send_rounded, size: 16),
-                            label: const Text('REMINDER', style: TextStyle(fontSize: 12)),
+                            label: const Text(
+                              'REMINDER',
+                              style: TextStyle(fontSize: 12),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              minimumSize: const Size(0, 40),
                             ),
                           )
                         else
-                          const Icon(Icons.check_circle, color: AppColors.statusApproved, size: 28),
+                          const Icon(
+                            Icons.check_circle,
+                            color: AppColors.statusApproved,
+                            size: 28,
+                          ),
                       ],
                     ),
                   );
@@ -611,38 +873,78 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                           color: AppColors.shadowLight,
                           blurRadius: 6,
                           offset: Offset(0, 2),
-                        )
+                        ),
                       ],
                     ),
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                          child: const Icon(Icons.shield_outlined, color: AppColors.primary),
+                          backgroundColor: AppColors.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          child: const Icon(
+                            Icons.shield_outlined,
+                            color: AppColors.primary,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(g.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                              Text(
+                                g.name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text('Assigned: ${g.assignedGateName} • ${g.phone}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                              Text(
+                                'Assigned: ${g.assignedGateName} • ${g.phone}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text('Shift: ${g.shift.nameDisplay}', style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600)),
+                              Text(
+                                'Shift: ${g.shift.nameDisplay}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: g.isOnDuty ? AppColors.statusApproved.withValues(alpha: 0.1) : AppColors.textMutedLight.withValues(alpha: 0.1),
+                            color: g.isOnDuty
+                                ? AppColors.statusApproved.withValues(
+                                    alpha: 0.1,
+                                  )
+                                : AppColors.textMutedLight.withValues(
+                                    alpha: 0.1,
+                                  ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             g.isOnDuty ? 'ON DUTY' : 'OFF DUTY',
                             style: TextStyle(
-                              color: g.isOnDuty ? AppColors.statusApproved : AppColors.textSecondaryLight,
+                              color: g.isOnDuty
+                                  ? AppColors.statusApproved
+                                  : AppColors.textSecondaryLight,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -674,23 +976,45 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                           color: AppColors.shadowLight,
                           blurRadius: 6,
                           offset: Offset(0, 2),
-                        )
+                        ),
                       ],
                     ),
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                          child: const Icon(Icons.person, color: AppColors.primary),
+                          backgroundColor: AppColors.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          child: const Icon(
+                            Icons.person,
+                            color: AppColors.primary,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(r.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                              Text(
+                                r.name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text('Flat: ${r.flatNumber} (${r.wingName}) • ${r.phone}', style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                              Text(
+                                'Flat: ${r.flatNumber} (${r.wingName}) • ${r.phone}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -722,7 +1046,7 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                         color: AppColors.primary.withValues(alpha: 0.3),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
-                      )
+                      ),
                     ],
                   ),
                   child: Column(
@@ -733,17 +1057,28 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                         children: [
                           Text(
                             'CURRENT PLAN: ${plan?.name.toUpperCase() ?? "STANDARD"}',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               tenant.subscriptionStatus.nameDisplay,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         ],
@@ -751,19 +1086,34 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
                       const SizedBox(height: 16),
                       Text(
                         'Billing: ₹${plan?.priceYearly.toStringAsFixed(0)} / Year',
-                        style: const TextStyle(color: Colors.white70, fontSize: 15),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 15,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Valid until: ${tenant.subscriptionExpiresAt.toLocal().toString().split(" ")[0]}',
-                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 32),
 
-                Text('SIMULATE EXPIRATION TEST', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13, letterSpacing: 0.5)),
+                Text(
+                  'SIMULATE EXPIRATION TEST',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                    letterSpacing: 0.5,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 OutlinedButton(
                   onPressed: () {
@@ -800,7 +1150,7 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
               color: AppColors.shadowLight,
               blurRadius: 8,
               offset: Offset(0, 2),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -810,15 +1160,37 @@ class _SocietyAdminScreenState extends ConsumerState<SocietyAdminScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13, fontWeight: FontWeight.w600)),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: Icon(icon, color: color, size: 20),
                 ),
               ],
             ),
-            Text(count, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 28, fontWeight: FontWeight.w900)),
+            Text(
+              count,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ],
         ),
       ),

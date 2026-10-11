@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Brand Primary & Accents (Figma style soft & vibrant)
-  static const Color primary = Color(0xFF4F46E5); // Indigo 600
-  static const Color primaryLight = Color(0xFF818CF8); // Indigo 400
-  static const Color primaryDark = Color(0xFF3730A3); // Indigo 800
-  static const Color accent = Color(0xFF0EA5E9); // Sky 500
+  static const Color primary = Color(0xFF2859C5);
+  static const Color primaryLight = Color(0xFF6D8EE0);
+  static const Color primaryDark = Color(0xFF1D3F91);
+  static const Color accent = Color(0xFF169B91);
 
   // Surface & Backgrounds (Dark theme - Keep for compatibility if needed)
   static const Color bgDark = Color(0xFF0F172A); // Slate 900
@@ -14,10 +14,10 @@ class AppColors {
   static const Color borderDark = Color(0xFF475569); // Slate 600
 
   // Surface & Backgrounds (Light theme - Clean & Airy)
-  static const Color bgLight = Color(0xFFF9FAFB); // Gray 50
+  static const Color bgLight = Color(0xFFF6F8FC);
   static const Color surfaceLight = Color(0xFFFFFFFF); // Pure White
   static const Color cardLight = Color(0xFFFFFFFF); // Pure White for cards
-  static const Color borderLight = Color(0xFFF3F4F6); // Gray 100
+  static const Color borderLight = Color(0xFFE7ECF3);
   
   // Soft shadows for cards
   static const Color shadowLight = Color(0x0A000000); // Very soft black

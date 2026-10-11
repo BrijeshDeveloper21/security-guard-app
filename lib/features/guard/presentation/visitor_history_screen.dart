@@ -5,7 +5,6 @@ import 'package:security_app/features/guard/models/visitor_visit.dart';
 import 'package:security_app/core/providers/app_providers.dart';
 import 'package:security_app/core/theme/app_colors.dart';
 import 'package:security_app/core/widgets/status_chip.dart';
-import 'package:security_app/features/resident/widgets/qr_view_dialog.dart';
 
 import 'package:security_app/features/guard/presentation/visitor_detail_screen.dart';
 
